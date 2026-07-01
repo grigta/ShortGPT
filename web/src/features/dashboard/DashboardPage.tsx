@@ -1,10 +1,224 @@
+import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
+import {
+  ArrowRight,
+  Clapperboard,
+  Download,
+  Film,
+  Languages,
+  Smartphone,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { Page } from '../../components/layout/Page'
 import { PageHeader } from '../../components/layout/PageHeader'
+import { Button } from '../../components/ui/Button'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { Modal } from '../../components/ui/Modal'
+import { TallyDot } from '../../components/ui/TallyDot'
+import { VideoPlayer } from '../../components/ui/VideoPlayer'
+import { videosApi } from '../../lib/api/videos'
+import { prettifyStepLabel } from '../../lib/steps'
+import type { VideoFile } from '../../lib/api/types'
+import { selectActiveJobs, useJobsStore } from '../../stores/jobs'
+
+const KIND_LABEL: Record<string, string> = {
+  short: 'Shorts',
+  video: 'Видео из стоков',
+  translation: 'Перевод',
+}
+
+const item = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const } },
+}
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <h2 className="mb-4 font-mono text-[12px] tracking-widest text-text-low uppercase">
+      {children}
+    </h2>
+  )
+}
 
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const active = useJobsStore(selectActiveJobs)
+  const { data: videos } = useQuery({ queryKey: ['videos'], queryFn: videosApi.list })
+  const [lightbox, setLightbox] = useState<VideoFile | null>(null)
+
+  // активные группы: по карточке на group_id
+  const groups = useMemo(() => {
+    const byGroup = new Map<string, typeof active>()
+    for (const j of active) {
+      const key = j.group_id ?? j.id
+      byGroup.set(key, [...(byGroup.get(key) ?? []), j])
+    }
+    return [...byGroup.entries()]
+  }, [active])
+
   return (
     <Page wide>
-      <PageHeader title="Студия" subtitle="Активные рендеры и последние видео" />
+      <PageHeader title="Студия" subtitle="Что в работе и что уже отснято" />
+
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.08 } } }}
+        className="space-y-12 pb-16"
+      >
+        {groups.length > 0 && (
+          <motion.section variants={item}>
+            <SectionTitle>Сейчас в работе</SectionTitle>
+            <div className="space-y-2.5">
+              {groups.map(([groupId, jobs]) => {
+                const running = jobs.find((j) => j.status === 'running') ?? jobs[0]
+                const done = jobs.filter((j) => j.status === 'done').length
+                return (
+                  <button
+                    key={groupId}
+                    type="button"
+                    onClick={() => navigate(`/jobs/${groupId}`)}
+                    className="flex w-full items-center gap-4 rounded-md border border-line bg-ink-900 px-5 py-4 text-left transition-all duration-120 hover:border-amber-500/30 hover:bg-ink-800"
+                  >
+                    <TallyDot status={running.status} className="size-2.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] text-text-hi">
+                        {KIND_LABEL[running.kind]}
+                        {jobs.length > 1 && (
+                          <span className="text-text-low"> · {done}/{jobs.length} готово</span>
+                        )}
+                      </p>
+                      <p className="mt-0.5 truncate font-mono text-[12px] text-text-mid">
+                        {running.status === 'running'
+                          ? `${running.step}/${running.total_steps} · ${prettifyStepLabel(running.step_label)}`
+                          : 'в очереди'}
+                      </p>
+                    </div>
+                    {/* мини-таймлайн */}
+                    {running.total_steps > 0 && (
+                      <div className="hidden w-40 shrink-0 sm:block">
+                        <div className="h-1 overflow-hidden rounded-full bg-ink-700">
+                          <div
+                            className="gradient-amber h-full rounded-full transition-[width] duration-700"
+                            style={{ width: `${(running.step / running.total_steps) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <ArrowRight size={15} className="shrink-0 text-text-low" />
+                  </button>
+                )
+              })}
+            </div>
+          </motion.section>
+        )}
+
+        <motion.section variants={item}>
+          <SectionTitle>Быстрые действия</SectionTitle>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              {
+                to: '/create/short',
+                icon: Smartphone,
+                title: 'Shorts',
+                text: 'Reddit-истории и факты, пачкой до 10 роликов',
+              },
+              {
+                to: '/create/video',
+                icon: Film,
+                title: 'Видео из стоков',
+                text: 'Описание → AI-сценарий → монтаж из стоков',
+              },
+              {
+                to: '/translate',
+                icon: Languages,
+                title: 'Перевод',
+                text: 'Дубляж ролика сразу на несколько языков',
+              },
+            ].map(({ to, icon: Icon, title, text }) => (
+              <Link
+                key={to}
+                to={to}
+                className="group rounded-lg border border-line bg-ink-900 p-6 transition-all duration-200 hover:-translate-y-1 hover:border-amber-500/40 hover:shadow-card"
+              >
+                <Icon
+                  size={22}
+                  strokeWidth={1.6}
+                  className="text-text-mid transition-colors duration-200 group-hover:text-amber-400"
+                />
+                <h3 className="text-display mt-4 text-[16px] font-medium text-text-hi">{title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-text-low">{text}</p>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] text-text-low transition-colors duration-200 group-hover:text-amber-400">
+                  Начать <ArrowRight size={13} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section variants={item}>
+          <SectionTitle>Последние рендеры</SectionTitle>
+          {!videos?.length ? (
+            <EmptyState
+              icon={<Clapperboard size={28} />}
+              title="Здесь появятся готовые видео"
+              description="Начните с Shorts — это самый быстрый путь к первому ролику"
+              action={
+                <Link to="/create/short">
+                  <Button variant="primary">Создать short</Button>
+                </Link>
+              }
+            />
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {videos.map((v) => (
+                <button
+                  key={v.filename}
+                  type="button"
+                  onClick={() => setLightbox(v)}
+                  className="group relative aspect-9/16 w-36 shrink-0 overflow-hidden rounded-md border border-line bg-black transition-all duration-200 hover:-translate-y-1 hover:border-amber-500/40 hover:shadow-card"
+                >
+                  <video
+                    src={v.url}
+                    preload="metadata"
+                    muted
+                    loop
+                    playsInline
+                    className="size-full object-cover"
+                    onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause()
+                      e.currentTarget.currentTime = 0
+                    }}
+                  />
+                  <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-ink-950/90 to-transparent px-2.5 pt-6 pb-2 text-left font-mono text-[10px] text-text-mid">
+                    {v.filename}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.section>
+      </motion.div>
+
+      <Modal
+        open={!!lightbox}
+        onClose={() => setLightbox(null)}
+        title={lightbox?.filename}
+        className="max-w-sm"
+      >
+        {lightbox && (
+          <div className="space-y-4">
+            <VideoPlayer src={lightbox.url} vertical autoPlay />
+            <a href={lightbox.url} download className="block">
+              <Button variant="primary" className="w-full" icon={<Download size={15} />}>
+                Скачать
+              </Button>
+            </a>
+          </div>
+        )}
+      </Modal>
     </Page>
   )
 }
