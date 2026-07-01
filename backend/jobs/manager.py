@@ -98,6 +98,7 @@ class JobManager:
             "total_steps": job.total_steps,
             "step_label": job.step_label,
             "log_tail": job.log[-LOG_TAIL:],
+            "log_len": len(job.log),
             "result_path": job.result_path,
             "video_url": video_url(job.result_path) if job.result_path else None,
             "error": job.error,

@@ -12,15 +12,29 @@ interface JobsStore {
   connected: boolean
   applyEvent: (e: JobEvent) => void
   hydrate: (jobs: (JobOut & { log?: string[] })[]) => void
+  /** Сервер не знает job'ы группы (перезапуск) — пометить активные потерянными. */
+  markLost: (groupId: string) => void
+  /** После гидрации списком: активные job'ы, которых сервер не вернул, — потеряны. */
+  markLostAbsent: (presentIds: string[]) => void
   setConnected: (v: boolean) => void
 }
 
 const ACTIVE: JobStatus[] = ['queued', 'running']
 
-function appendLog(current: string[], tail: string[] | undefined): string[] {
+function appendLog(
+  current: string[],
+  tail: string[] | undefined,
+  serverLen: number | undefined,
+): string[] {
   if (!tail?.length) return current
-  // log_tail (последние N строк) перекрывается с накопленным логом —
-  // ищем максимальное перекрытие «хвост current == начало tail» и дописываем остаток
+  // Точный merge: сервер сообщает полную длину лога. Отставшие события
+  // (serverLen ≤ уже накопленного) игнорируем — иначе гонка fetch/SSE дублирует строки.
+  if (typeof serverLen === 'number') {
+    const gap = serverLen - current.length
+    if (gap <= 0) return current
+    return [...current, ...tail.slice(Math.max(0, tail.length - gap))]
+  }
+  // Fallback без log_len: перекрытие «хвост current == начало tail»
   const max = Math.min(current.length, tail.length)
   for (let k = max; k > 0; k--) {
     let match = true
@@ -51,7 +65,7 @@ export const useJobsStore = create<JobsStore>((set) => ({
       ) {
         return s
       }
-      const { log_tail, ...job } = e
+      const { log_tail, log_len, ...job } = e
       const step_labels = { ...prev?.step_labels }
       if (e.step >= 1 && e.step_label) step_labels[e.step] = e.step_label
       return {
@@ -60,7 +74,7 @@ export const useJobsStore = create<JobsStore>((set) => ({
           [e.id]: {
             ...prev,
             ...job,
-            log: appendLog(prev?.log ?? [], log_tail),
+            log: appendLog(prev?.log ?? [], log_tail, log_len),
             step_labels,
           },
         },
@@ -82,6 +96,46 @@ export const useJobsStore = create<JobsStore>((set) => ({
         }
       }
       return { jobs }
+    }),
+
+  markLostAbsent: (presentIds) =>
+    set((s) => {
+      const present = new Set(presentIds)
+      const jobs = { ...s.jobs }
+      let changed = false
+      for (const j of Object.values(jobs)) {
+        if (ACTIVE.includes(j.status) && !present.has(j.id)) {
+          jobs[j.id] = {
+            ...j,
+            status: 'failed',
+            error:
+              'Сервер перезапускался — рендер прерван и не может быть возобновлён. Запустите заново.',
+          }
+          changed = true
+        }
+      }
+      return changed ? { jobs } : s
+    }),
+
+  markLost: (groupId) =>
+    set((s) => {
+      const jobs = { ...s.jobs }
+      let changed = false
+      for (const j of Object.values(jobs)) {
+        if (
+          (j.group_id === groupId || j.id === groupId) &&
+          ACTIVE.includes(j.status)
+        ) {
+          jobs[j.id] = {
+            ...j,
+            status: 'failed',
+            error:
+              'Сервер перезапускался — рендер прерван и не может быть возобновлён. Запустите заново.',
+          }
+          changed = true
+        }
+      }
+      return changed ? { jobs } : s
     }),
 
   setConnected: (v) => set({ connected: v }),

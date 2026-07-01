@@ -15,6 +15,12 @@ export function useJobGroup(groupId: string): JobState[] {
     void (async () => {
       try {
         const list = await jobsApi.list({ group_id: groupId, limit: 50 })
+        if (!alive) return
+        if (list.length === 0) {
+          // сервер про группу не знает (перезапуск) — не держать вечный «running»
+          useJobsStore.getState().markLost(groupId)
+          return
+        }
         const details = await Promise.all(list.map((j) => jobsApi.get(j.id)))
         if (alive) useJobsStore.getState().hydrate(details)
       } catch {

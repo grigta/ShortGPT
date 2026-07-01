@@ -10,7 +10,10 @@ let source: EventSource | null = null
 async function hydrateFromSnapshot() {
   try {
     const jobs = await api.get<JobOut[]>('/api/jobs?limit=100')
-    useJobsStore.getState().hydrate(jobs)
+    const store = useJobsStore.getState()
+    store.hydrate(jobs)
+    // после перезапуска сервера in-memory job'ы пропадают — не держать вечный «running»
+    store.markLostAbsent(jobs.map((j) => j.id))
   } catch {
     // бэкенд недоступен — состояние придёт со следующим реконнектом
   }

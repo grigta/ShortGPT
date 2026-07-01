@@ -40,6 +40,8 @@ export interface JobEventPayload {
   total_steps: number
   step_label: string
   log_tail?: string[]
+  /** Полная длина серверного лога — для точного merge log_tail */
+  log_len?: number
   result_path: string | null
   video_url: string | null
   error: string | null
