@@ -18,7 +18,9 @@ from backend.jobs.manager import JobManager
 from backend.routers import (assets, health, jobs, models, script, settings,
                             videos, voices)
 
-WEB_DIST = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web", "dist")
+ROOT = os.path.dirname(os.path.dirname(__file__))
+WEB_DIST = os.path.join(ROOT, "web", "dist")
+PUBLIC_DIR = os.path.join(ROOT, "public")
 
 
 @asynccontextmanager
@@ -73,6 +75,10 @@ def create_app() -> FastAPI:
     for r in (health.router, voices.router, settings.router, models.router,
               assets.router, videos.router, script.router, jobs.router):
         app.include_router(r, prefix="/api")
+
+    # Раздача локальных ассетов из public/ (превью на фронте; StaticFiles поддерживает Range).
+    if os.path.isdir(PUBLIC_DIR):
+        app.mount("/api/files/public", StaticFiles(directory=PUBLIC_DIR), name="public-files")
 
     # Фронт монтируется, только если собран (web/dist ещё может не существовать).
     if os.path.isdir(WEB_DIST):

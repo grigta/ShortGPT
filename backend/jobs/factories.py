@@ -94,10 +94,14 @@ def build_translation_factory(req: TranslationRequest, target_language: str) -> 
         target_lang = _language(target_language)
         # Голос собирается под целевой язык (EdgeTTS-голос соответствует переводу).
         voice_module = _build_voice_module(req.voice, target_lang)
+        # Если src_url — link загруженного локального ассета (/api/files/public/...),
+        # движку нужен диск-путь, а не API-URL.
+        from backend.services.assets import resolve_media_path
+        src = resolve_media_path(req.src_url)
         from shortGPT.engine.multi_language_translation_engine import MultiLanguageTranslationEngine
         return MultiLanguageTranslationEngine(
             voiceModule=voice_module,
-            src_url=req.src_url,
+            src_url=src,
             target_language=target_lang,
             use_captions=req.use_captions,
         )

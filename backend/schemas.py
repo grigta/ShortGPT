@@ -7,7 +7,8 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 NAME_RE = re.compile(r"^[A-Za-z0-9 _-]+$")
-WATERMARK_RE = re.compile(r"^[A-Za-z0-9 ]+$")
+# Синхронизировано с фронтом: латиница, кириллица, цифры, пробел, - и _.
+WATERMARK_RE = re.compile(r"^[A-Za-z0-9а-яА-ЯёЁ _-]+$")
 
 
 # --- Голос -----------------------------------------------------------------

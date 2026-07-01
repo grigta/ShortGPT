@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 from typing import List
+from urllib.parse import quote
 
 import pandas as pd
 
@@ -13,6 +14,31 @@ from shortGPT.config.asset_db import (AUDIO_EXTENSIONS, IMAGE_EXTENSIONS,
 
 PUBLIC_DIR = "public"
 NAME_RE = re.compile(r"^[A-Za-z0-9 _-]+$")
+
+
+PUBLIC_URL_PREFIX = "/api/files/public/"
+
+
+def public_url(path: str) -> str:
+    """Диск-путь ассета под public/ -> URL раздачи /api/files/public/<rel>."""
+    p = (path or "").replace(os.sep, "/")
+    prefix = PUBLIC_DIR + "/"
+    rel = p[len(prefix):] if p.startswith(prefix) else p
+    return PUBLIC_URL_PREFIX + quote(rel)  # quote сохраняет '/' в подпутях
+
+
+def resolve_media_path(src: str) -> str:
+    """Обратный маппинг: URL раздачи /api/files/public/<rel> -> диск-путь public/<rel>.
+
+    Нужен там, где link локального ассета переиспользуется как источник для движка
+    (напр. src_url перевода) — движок открывает локальный путь, а не API-URL.
+    Ссылки YouTube и обычные пути возвращаются как есть.
+    """
+    from urllib.parse import unquote
+    if src and src.startswith(PUBLIC_URL_PREFIX):
+        rel = unquote(src[len(PUBLIC_URL_PREFIX):])
+        return os.path.join(PUBLIC_DIR, rel)
+    return src
 
 # Значение asset_type (строка) -> (AssetType, допустимые расширения)
 _TYPE_MAP = {
@@ -47,6 +73,10 @@ def list_assets() -> List[dict]:
     records = df.to_dict("records")
     for r in records:
         r.setdefault("duration", None)  # duration ленив, в листинге не считаем
+        # Локальные ассеты отдаём как servable URL (превью на фронте);
+        # remote (YouTube/internet) — исходный URL как есть.
+        if r.get("source") == "local" and r.get("link"):
+            r["link"] = public_url(r["link"])
     return records
 
 
@@ -75,7 +105,8 @@ def add_local_asset(name: str, asset_type: str, filename: str, data: bytes) -> d
     with open(dest, "wb") as f:
         f.write(data)
     AssetDatabase.add_local_asset(name, kind, dest)
-    return {"name": name, "type": kind.value, "source": "local", "link": dest, "duration": None}
+    return {"name": name, "type": kind.value, "source": "local",
+            "link": public_url(dest), "duration": None}
 
 
 def add_remote_asset(name: str, asset_type: str, url: str) -> dict:
