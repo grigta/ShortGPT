@@ -18,7 +18,7 @@ class ShortGptUI(AbstractBaseUI):
 
     def create_interface(self):
         '''Create Gradio interface'''
-        with gr.Blocks(theme=gr.themes.Default(spacing_size=gr.themes.sizes.spacing_sm), css="footer {visibility: hidden}", title="ShortGPT Demo") as shortGptUI:
+        with gr.Blocks(theme=GradioComponentsHTML.get_theme(), css=GradioComponentsHTML.get_css(), title="ShortGPT — Студия видео") as shortGptUI:
             with gr.Row(variant='compact'):
                 gr.HTML(GradioComponentsHTML.get_html_header())
 
@@ -31,9 +31,9 @@ class ShortGptUI(AbstractBaseUI):
         '''Launch the server'''
         shortGptUI = self.create_interface()
         if not getattr(self, 'colab', False):
-                    print("\n\n********************* STARTING SHORGPT **********************")
-                    print("\nShortGPT is running here 👉 http://localhost:31415\n")
-                    print("********************* STARTING SHORGPT **********************\n\n")
+                    print("\n\n********************* ЗАПУСК SHORTGPT **********************")
+                    print("\nПанель ShortGPT доступна здесь 👉 http://localhost:31415\n")
+                    print("********************* ЗАПУСК SHORTGPT **********************\n\n")
         shortGptUI.queue().launch(server_port=31415, height=1000, allowed_paths=["public/","videos/","fonts/"], share=self.colab, server_name="0.0.0.0")
 
 

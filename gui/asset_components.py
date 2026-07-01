@@ -11,8 +11,8 @@ from shortGPT.config.asset_db import AssetDatabase
 
 
 class AssetComponentsUtils:
-    EDGE_TTS = "Free EdgeTTS (lower quality)"
-    ELEVEN_TTS = "ElevenLabs(Very High Quality)"
+    EDGE_TTS = "EdgeTTS — бесплатно (среднее качество)"
+    ELEVEN_TTS = "ElevenLabs — очень высокое качество"
 
 
     instance_background_video_checkbox = None
@@ -54,7 +54,7 @@ class AssetComponentsUtils:
             cls.instance_background_video_checkbox = gr.CheckboxGroup(
                 choices=choices,
                 interactive=True,
-                label="Choose background video",
+                label="Фоновое видео",
                 value=random.choice(choices)
             )
         return cls.instance_background_video_checkbox
@@ -66,7 +66,7 @@ class AssetComponentsUtils:
             cls.instance_background_music_checkbox = gr.CheckboxGroup(
                 choices=choices,
                 interactive=True,
-                label="Choose background music",
+                label="Фоновая музыка",
                 value=random.choice(choices)
             )
         return cls.instance_background_music_checkbox
@@ -79,7 +79,7 @@ class AssetComponentsUtils:
             if provider == cls.ELEVEN_TTS:
                 cls.instance_voiceChoice[provider] = gr.Radio(
                     cls.getElevenlabsVoices(),
-                    label="Elevenlabs voice",
+                    label="Голос ElevenLabs",
                     value="Chris",
                     interactive=True,
                 )
@@ -93,7 +93,7 @@ class AssetComponentsUtils:
             if provider == cls.ELEVEN_TTS:
                 cls.instance_voiceChoiceTranslation[provider] = gr.Radio(
                     cls.getElevenlabsVoices(),
-                    label="Elevenlabs voice",
+                    label="Голос ElevenLabs",
                     value="Chris",
                     interactive=True,
                 )

@@ -79,6 +79,7 @@ class Language(Enum):
     ZULU = "Zulu"
 
 ELEVEN_SUPPORTED_LANGUAGES=[Language.ENGLISH,
+    Language.RUSSIAN,
     Language.SPANISH,
     Language.FRENCH,
     Language.ARABIC,

@@ -1,4 +1,5 @@
 from shortGPT.api_utils.image_api import getBingImages
+from shortGPT.gpt import openrouter
 from tqdm import tqdm
 import random
 import math
@@ -9,6 +10,14 @@ def getImageUrlsTimed(imageTextPairs):
 
 
 def searchImageUrlsFromQuery(query, top=3, expected_dim=[720,720], retries=5):
+    # Если выбрана модель генерации картинок OpenRouter — генерируем изображение,
+    # иначе (по умолчанию) ищем картинку в поиске Bing.
+    image_model = openrouter.get_selected_image_model()
+    if image_model:
+        try:
+            return openrouter.generate_image(query)
+        except Exception as e:
+            print("Ошибка генерации картинки через OpenRouter, откат к поиску Bing:", e)
     images = getBingImages(query, retries=retries)
     if(images):
         distances = list(map(lambda x: math.dist([x['width'], x['height']], expected_dim), images[0:top]))

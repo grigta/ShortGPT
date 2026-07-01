@@ -28,22 +28,22 @@ class VideoTranslationUI(AbstractComponentUI):
     def create_ui(self):
         with gr.Row(visible=False) as video_translation_ui:
             with gr.Column():
-                videoType = gr.Radio(["Youtube link", "Video file"], label="Input your video", value="Youtube link", interactive=True)
+                videoType = gr.Radio([("Ссылка на YouTube", "Youtube link"), ("Видеофайл", "Video file")], label="Источник видео", value="Youtube link", interactive=True)
                 video_path = gr.Video(sources="upload", interactive=True, width=533.33, height=300, visible=False)
-                yt_link = gr.Textbox(label="Youtube link (https://youtube.com/xyz): ", interactive=True, visible=False)
+                yt_link = gr.Textbox(label="Ссылка на YouTube (https://youtube.com/xyz):", interactive=True, visible=False)
                 videoType.change(lambda x: (gr.update(visible=x == "Video file"), gr.update(visible=x == "Youtube link")), [videoType], [video_path, yt_link])
-                tts_engine = gr.Radio([AssetComponentsUtils.ELEVEN_TTS, AssetComponentsUtils.EDGE_TTS], label="Text to speech engine", value=AssetComponentsUtils.EDGE_TTS, interactive=True)
+                tts_engine = gr.Radio([AssetComponentsUtils.ELEVEN_TTS, AssetComponentsUtils.EDGE_TTS], label="Движок озвучки (TTS)", value=AssetComponentsUtils.EDGE_TTS, interactive=True)
                 with gr.Column(visible=False) as eleven_tts:
-                    language_eleven = gr.CheckboxGroup(self.eleven_language_choices, label="Language", value="ENGLISH", interactive=True)
+                    language_eleven = gr.CheckboxGroup(self.eleven_language_choices, label="Языки перевода", value="ENGLISH", interactive=True)
                     voice_eleven = AssetComponentsUtils.voiceChoiceTranslation(provider=AssetComponentsUtils.ELEVEN_TTS)
                 with gr.Column(visible=True) as edge_tts:
-                    language_edge = gr.CheckboxGroup([lang.value.upper() for lang in Language], label="Language", value="ENGLISH", interactive=True)
-               
+                    language_edge = gr.CheckboxGroup([lang.value.upper() for lang in Language], label="Языки перевода", value="ENGLISH", interactive=True)
+
                 tts_engine.change(lambda x: (gr.update(visible=x == AssetComponentsUtils.ELEVEN_TTS), gr.update(visible=x == AssetComponentsUtils.EDGE_TTS)), [tts_engine], [eleven_tts, edge_tts])
 
-                useCaptions = gr.Checkbox(label="Caption video", value=False)
+                useCaptions = gr.Checkbox(label="Добавить субтитры", value=False)
 
-                translateButton = gr.Button("Translate Video")
+                translateButton = gr.Button("Перевести видео", variant="primary")
 
                 generation_error = gr.HTML(visible=False)
                 video_folder = gr.Button("📁", visible=True)
@@ -71,11 +71,11 @@ class VideoTranslationUI(AbstractComponentUI):
                 content_translation_engine = MultiLanguageTranslationEngine(voiceModule=voice_module, src_url=yt_link if videoType == "Youtube link" else video_path, target_language=language, use_captions=use_captions)
                 num_steps = content_translation_engine.get_total_steps()
                 def logger(prog_str):
-                    progress(self.progress_counter / (num_steps), f"Translating your video ({i+1}/{len(languages)}) - {prog_str}")
+                    progress(self.progress_counter / (num_steps), f"Перевожу видео ({i+1}/{len(languages)}) — {prog_str}")
                 content_translation_engine.set_logger(logger)
 
                 for step_num, step_info in content_translation_engine.makeContent():
-                    progress(self.progress_counter / (num_steps), f"Translating your video ({i+1}/{len(languages)}) - {step_info}")
+                    progress(self.progress_counter / (num_steps), f"Перевожу видео ({i+1}/{len(languages)}) — {step_info}")
                     self.progress_counter += 1
 
                 video_path = content_translation_engine.get_video_output_path()
@@ -84,12 +84,12 @@ class VideoTranslationUI(AbstractComponentUI):
                 file_name = video_path.split("/")[-1].split("\\")[-1]
                 self.embedHTML += f'''
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <video width="{500}"  style="max-height: 100%;" controls>
+                    <video width="{500}"  style="max-height: 100%; border-radius: 12px;" controls>
                         <source src="{file_url_path}" type="video/mp4">
-                        Your browser does not support the video tag.
+                        Ваш браузер не поддерживает тег video.
                     </video>
-                    <a href="{file_url_path}" download="{file_name}" style="margin-top: 10px;">
-                        <button style="font-size: 1em; padding: 10px; border: none; cursor: pointer; color: white; background: #007bff;">Download Video</button>
+                    <a href="{file_url_path}" download="{file_name}" style="margin-top: 12px; text-decoration:none;">
+                        <button style="font-size: 1em; padding: 10px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; color: #1A1205; background: linear-gradient(150deg,#FFC15A,#F6A623);">Скачать видео</button>
                     </a>
                 </div>'''
                 yield "<div>"+self.embedHTML + '</div>', gr.update(visible=True), gr.update(visible=False)
@@ -106,20 +106,20 @@ class VideoTranslationUI(AbstractComponentUI):
         print(videoType, video_path, yt_link)
         if videoType == "Youtube link":
             if not yt_link.startswith("https://youtube.com/") and not yt_link.startswith("https://www.youtube.com/"):
-                raise gr.Error('Invalid YouTube URL. Please provide a valid URL. Link example: https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+                raise gr.Error('Неверная ссылка на YouTube. Укажите корректный URL. Пример: https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         else:
             if not video_path or not os.path.exists(video_path):
-                raise gr.Error('You must drag and drop a valid video file.')
+                raise gr.Error('Перетащите сюда корректный видеофайл.')
 
             file_ext = os.path.splitext(video_path)[-1].lower()
             if file_ext not in supported_extensions:
-                raise gr.Error('Invalid video file. Supported video file extensions are: {}'.format(', '.join(supported_extensions)))
+                raise gr.Error('Неподдерживаемый видеофайл. Допустимые расширения: {}'.format(', '.join(supported_extensions)))
         if tts_engine == AssetComponentsUtils.ELEVEN_TTS:
             if not len(language_eleven) >0:
-                raise gr.Error('You must select one or more target languages')
+                raise gr.Error('Выберите один или несколько языков перевода')
         if tts_engine == AssetComponentsUtils.EDGE_TTS:
             if not len(language_edge) >0:
-                raise gr.Error('You must select one or more target languages')
+                raise gr.Error('Выберите один или несколько языков перевода')
         return gr.update(visible=False)
 
 

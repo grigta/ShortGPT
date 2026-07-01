@@ -48,14 +48,13 @@ class VideoAutomationUI(AbstractComponentUI):
         self.outHTML = None
 
     def is_key_missing(self):
-        openai_key = ApiKeyManager.get_api_key("OPENAI_API_KEY")
-        gemini_key = ApiKeyManager.get_api_key("GEMINI_API_KEY")
-        if not openai_key and not gemini_key:
-            return "Your Genmini or OpenAI key is missing. Please go to the config tab and enter the API key."
+        openrouter_key = ApiKeyManager.get_api_key("OPENROUTER_API_KEY")
+        if not openrouter_key:
+            return "Отсутствует ключ OpenRouter. Откройте вкладку «Настройки» и введите ключ API."
 
         pexels_api_key = ApiKeyManager.get_api_key("PEXELS_API_KEY")
         if not pexels_api_key:
-            return "Your Pexels API key is missing. Please go to the config tab and enter the API key."
+            return "Отсутствует ключ Pexels API. Откройте вкладку «Настройки» и введите ключ API."
 
     def generate_script(self, message, language):
         return gpt_chat_video.generateScript(message, language)
@@ -93,25 +92,25 @@ class VideoAutomationUI(AbstractComponentUI):
                 if errorMessage:
                     bot_message = errorMessage
                 else:
-                    self.isVertical = "vertical" in message.lower() or "short" in message.lower()
+                    self.isVertical = "vertical" in message.lower() or "short" in message.lower() or "верт" in message.lower() or "шорт" in message.lower()
                     self.state = Chatstate.ASK_VOICE_MODULE
-                    bot_message = "Which voice module do you want to use? Please type 'ElevenLabs' for high quality, 'EdgeTTS' for free medium quality voice."
+                    bot_message = "Какой движок озвучки использовать? Напишите «ElevenLabs» — высокое качество, «EdgeTTS» — бесплатно, среднее качество."
             elif self.state == Chatstate.ASK_VOICE_MODULE:
-                if "elevenlabs" in message.lower():
+                if "elevenlabs" in message.lower() or "eleven" in message.lower():
                     eleven_labs_key = ApiKeyManager.get_api_key("ELEVENLABS_API_KEY")
                     if not eleven_labs_key:
-                        bot_message = "Your ELEVENLABS_API_KEY API key is missing. Please go to the config tab and enter the API key."
+                        bot_message = "Отсутствует ключ ElevenLabs API. Откройте вкладку «Настройки» и введите ключ API."
                         return
                     self.voice_module = ElevenLabsVoiceModule
                     language_choices = [lang.value for lang in ELEVEN_SUPPORTED_LANGUAGES]
-                elif "edgetts" in message.lower():
+                elif "edgetts" in message.lower() or "edge" in message.lower():
                     self.voice_module = EdgeTTSVoiceModule
                     language_choices = [lang.value for lang in Language]
                 else:
-                    bot_message = "Invalid voice module. Please type 'ElevenLabs' or 'EdgeTTS'."
+                    bot_message = "Не удалось распознать движок. Напишите «ElevenLabs» или «EdgeTTS»."
                     return
                 self.state = Chatstate.ASK_LANGUAGE
-                bot_message = f"🌐What language will be used in the video?🌐 Choose from one of these ({', '.join(language_choices)})"
+                bot_message = f"🌐 На каком языке будет видео? Выберите один из вариантов ({', '.join(language_choices)})"
             elif self.state == Chatstate.ASK_LANGUAGE:
                 self.language = next((lang for lang in Language if lang.value.lower() in message.lower()), None)
                 self.language = self.language if self.language else Language.ENGLISH
@@ -120,16 +119,16 @@ class VideoAutomationUI(AbstractComponentUI):
                 elif self.voice_module == EdgeTTSVoiceModule:
                     self.voice_module = EdgeTTSVoiceModule(EDGE_TTS_VOICENAME_MAPPING[self.language]['male'])
                 self.state = Chatstate.ASK_DESCRIPTION
-                bot_message = "Amazing 🔥 ! 📝Can you describe thoroughly the subject of your video?📝 I will next generate you a script based on that description"
+                bot_message = "Отлично 🔥! 📝 Опишите подробно тему вашего видео — я сгенерирую сценарий по этому описанию."
             elif self.state == Chatstate.ASK_DESCRIPTION:
                 self.script = self.generate_script(message, self.language.value)
                 self.state = Chatstate.ASK_SATISFACTION
-                bot_message = f"📝 Here is your generated script: \n\n--------------\n{self.script}\n\n・Are you satisfied with the script and ready to proceed with creating the video? Please respond with 'YES' or 'NO'. 👍👎"
+                bot_message = f"📝 Вот сгенерированный сценарий:\n\n--------------\n{self.script}\n\n・Устраивает сценарий? Готовы приступить к созданию видео? Ответьте «ДА» или «НЕТ». 👍👎"
             elif self.state == Chatstate.ASK_SATISFACTION:
-                if "yes" in message.lower():
+                if "yes" in message.lower() or "да" in message.lower():
                     self.state = Chatstate.MAKE_VIDEO
                     inputVisible = False
-                    yield gr.update(visible=False), gr.update(value=[[None, "Your video is being made now! 🎬"]]), gr.update(value="", visible=False), gr.update(value=error_html, visible=errorVisible), gr.update(visible=folderVisible), gr.update(visible=False)
+                    yield gr.update(visible=False), gr.update(value=[[None, "Ваше видео создаётся! 🎬"]]), gr.update(value="", visible=False), gr.update(value=error_html, visible=errorVisible), gr.update(visible=folderVisible), gr.update(visible=False)
                     try:
                         video_path = self.make_video(self.script, self.voice_module, self.isVertical, progress=progress)
                         file_name = video_path.split("/")[-1].split("\\")[-1]
@@ -137,34 +136,34 @@ class VideoAutomationUI(AbstractComponentUI):
                         file_url_path = f"{current_url}gradio_api/file={video_path}"
                         self.video_html = f'''
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <video width="{600}" height="{300}" style="max-height: 100%;" controls>
+                                <video width="{600}" height="{300}" style="max-height: 100%; border-radius: 12px;" controls>
                                     <source src="{file_url_path}" type="video/mp4">
-                                    Your browser does not support the video tag.
+                                    Ваш браузер не поддерживает тег video.
                                 </video>
-                                <a href="{file_url_path}" download="{file_name}" style="margin-top: 10px;">
-                                    <button style="font-size: 1em; padding: 10px; border: none; cursor: pointer; color: white; background: #007bff;">Download Video</button>
+                                <a href="{file_url_path}" download="{file_name}" style="margin-top: 12px; text-decoration:none;">
+                                    <button style="font-size: 1em; padding: 10px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; color: #1A1205; background: linear-gradient(150deg,#FFC15A,#F6A623);">Скачать видео</button>
                                 </a>
                             </div>'''
                         self.videoVisible = True
                         folderVisible = True
-                        bot_message = "Your video is completed !🎬. Scroll down below to open its file location."
+                        bot_message = "Видео готово! 🎬 Прокрутите вниз, чтобы открыть папку с файлом."
                     except Exception as e:
                         traceback_str = ''.join(traceback.format_tb(e.__traceback__))
                         error_name = type(e).__name__.capitalize() + " : " + f"{e.args[0]}"
                         errorVisible = True
                         gradio_content_automation_ui_error_template = GradioComponentsHTML.get_html_error_template()
                         error_html = gradio_content_automation_ui_error_template.format(error_message=error_name, stack_trace=traceback_str)
-                        bot_message = "We encountered an error while making this video ❌"
+                        bot_message = "При создании видео произошла ошибка ❌"
                         print("Error", traceback_str)
-                        yield gr.update(visible=False), gr.update(value=[[None, "Your video is being made now! 🎬"]]), gr.update(value="", visible=False), gr.update(value=error_html, visible=errorVisible), gr.update(visible=folderVisible), gr.update(visible=True)
+                        yield gr.update(visible=False), gr.update(value=[[None, "Ваше видео создаётся! 🎬"]]), gr.update(value="", visible=False), gr.update(value=error_html, visible=errorVisible), gr.update(visible=folderVisible), gr.update(visible=True)
 
                 else:
                     self.state = Chatstate.ASK_CORRECTION  # change self.state to ASK_CORRECTION
-                    bot_message = "Explain me what you want different in the script"
+                    bot_message = "Опишите, что нужно изменить в сценарии"
             elif self.state == Chatstate.ASK_CORRECTION:  # new self.state
                 self.script = self.correct_script(self.script, message)  # call generateScript with correct=True
                 self.state = Chatstate.ASK_SATISFACTION
-                bot_message = f"📝 Here is your corrected script: \n\n--------------\n{self.script}\n\n・Are you satisfied with the script and ready to proceed with creating the video? Please respond with 'YES' or 'NO'. 👍👎"
+                bot_message = f"📝 Вот исправленный сценарий:\n\n--------------\n{self.script}\n\n・Устраивает сценарий? Готовы приступить к созданию видео? Ответьте «ДА» или «НЕТ». 👍👎"
             chat_history.append((message, bot_message))
             yield gr.update(value="", visible=inputVisible), gr.update(value=chat_history), gr.update(value=self.video_html, visible=self.videoVisible), gr.update(value=error_html, visible=errorVisible), gr.update(visible=folderVisible), gr.update(visible=True)
 
@@ -177,7 +176,7 @@ class VideoAutomationUI(AbstractComponentUI):
         self.script = ""
         self.video_html = ""
         self.videoVisible = False
-        return [[None, "🤖 Welcome to ShortGPT! 🚀 I'm a python framework aiming to simplify and automate your video editing tasks.\nLet's get started! 🎥🎬\n\n Do you want your video to be in landscape or vertical format? (landscape OR vertical)"]]
+        return [[None, "🤖 Добро пожаловать в ShortGPT! 🚀 Я помогу автоматизировать создание и монтаж видео.\nНачнём! 🎥🎬\n\nКакой формат видео нужен — горизонтальный или вертикальный? (горизонтальное ИЛИ вертикальное)"]]
 
     def reset_conversation(self):
         self.state = Chatstate.ASK_ORIENTATION
@@ -190,9 +189,9 @@ class VideoAutomationUI(AbstractComponentUI):
     def create_ui(self):
         with gr.Row(visible=False) as self.video_automation:
             with gr.Column():
-                self.chatbot = gr.Chatbot(self.initialize_conversation, height=365)
-                self.msg = gr.Textbox()
-                self.restart_button = gr.Button("Restart")
+                self.chatbot = gr.Chatbot(self.initialize_conversation, height=365, label="Диалог")
+                self.msg = gr.Textbox(placeholder="Введите сообщение и нажмите Enter…", label="Ваше сообщение")
+                self.restart_button = gr.Button("Начать заново")
                 self.video_folder = gr.Button("📁", visible=False)
                 self.video_folder.click(lambda _: AssetComponentsUtils.start_file(os.path.abspath("videos/")))
                 respond = self.chatbot_conversation()

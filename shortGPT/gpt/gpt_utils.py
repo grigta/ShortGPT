@@ -10,22 +10,21 @@ import yaml
 from shortGPT.config.api_db import ApiKeyManager
 
 
-def num_tokens_from_messages(texts, model="gpt-4o-mini"):
-    """Returns the number of tokens used by a list of messages."""
+def num_tokens_from_messages(texts, model=None):
+    """Универсальная приблизительная оценка числа токенов.
+
+    Модели OpenRouter используют разные токенизаторы, поэтому берём
+    общий cl100k_base как достаточно точное приближение для любой модели.
+    """
     try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-4o-mini":  # note: future models may deviate from this
+    except Exception:
         if isinstance(texts, str):
             texts = [texts]
-        score = 0
-        for text in texts:
-            score += 4 + len(encoding.encode(text))
-        return score
-    else:
-        raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
-        See https://github.com/openai/openai-python/blob/main/chatml.md for information""")
+        return sum(len(t) // 4 + 4 for t in texts)
+    if isinstance(texts, str):
+        texts = [texts]
+    return sum(4 + len(encoding.encode(text)) for text in texts)
 
 
 def extract_biggest_json(string):
@@ -67,22 +66,22 @@ def load_local_yaml_prompt(file_path):
 def open_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
         return infile.read()
-from openai import OpenAI
+from shortGPT.gpt import openrouter
 
-def llm_completion(chat_prompt="", system="", temp=0.7, max_tokens=2000, remove_nl=True, conversation=None):
-    openai_key= ApiKeyManager.get_api_key("OPENAI_API_KEY")
-    gemini_key = ApiKeyManager.get_api_key("GEMINI_API_KEY")
-    if gemini_key:
-        client = OpenAI( 
-            api_key=gemini_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-        )
-        model="gemini-2.0-flash-lite-preview-02-05"
-    elif openai_key:
-        client = OpenAI( api_key=openai_key)
-        model="gpt-4o-mini"
-    else:
-        raise Exception("No OpenAI or Gemini API Key found for LLM request")
+
+def llm_completion(chat_prompt="", system="", temp=0.7, max_tokens=2000, remove_nl=True, conversation=None, model=None):
+    """Запрос к выбранной модели OpenRouter.
+
+    Модель по умолчанию берётся из настроек (выбранная пользователем), но её
+    можно переопределить аргументом ``model``. Лимит вывода адаптируется под
+    ограничения конкретной модели, если они известны.
+    """
+    client = openrouter.get_client()
+    model = model or openrouter.get_selected_model()
+    info = openrouter.get_model_info(model) or {}
+    max_completion = info.get("max_completion")
+    if max_completion:
+        max_tokens = min(max_tokens, int(max_completion))
     max_retry = 5
     retry = 0
     error = ""
@@ -100,7 +99,7 @@ def llm_completion(chat_prompt="", system="", temp=0.7, max_tokens=2000, remove_
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temp,
-                timeout=30
+                timeout=60
                 )
             text = response.choices[0].message.content.strip()
             if remove_nl:
@@ -113,7 +112,7 @@ def llm_completion(chat_prompt="", system="", temp=0.7, max_tokens=2000, remove_
             return text
         except Exception as oops:
             retry += 1
-            print('Error communicating with OpenAI:', oops)
+            print('Ошибка запроса к OpenRouter:', oops)
             error = str(oops)
             sleep(1)
-    raise Exception(f"Error communicating with LLM Endpoint Completion errored more than error: {error}")
+    raise Exception(f"Не удалось получить ответ от модели OpenRouter. Последняя ошибка: {error}")

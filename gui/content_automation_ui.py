@@ -13,10 +13,10 @@ class GradioContentAutomationUI:
 
     def create_ui(self):
         '''Create Gradio interface'''
-        with gr.Tab("Content Automation") as self.content_automation_ui:
-            gr.Markdown("# 🏆 Content Automation 🚀")
-            gr.Markdown("## Choose your desired automation task.")
-            choice = gr.Radio(['🎬 Automate the creation of shorts', '🎞️ Automate a video with stock assets', '🌐 Automate multilingual video dubbing'], label="Choose an option")
+        with gr.Tab("Создание контента") as self.content_automation_ui:
+            gr.Markdown("# 🎬 Создание контента")
+            gr.Markdown("## Выберите задачу автоматизации")
+            choice = gr.Radio(['🎬 Создание Shorts (вертикальные ролики)', '🎞️ Видео из стоковых материалов', '🌐 Многоязычный дубляж видео'], label="Выберите вариант")
             video_automation_ui = VideoAutomationUI(self.shortGPTUI).create_ui()
             short_automation_ui = ShortAutomationUI(self.shortGPTUI).create_ui()
             video_translation_ui = VideoTranslationUI(self.shortGPTUI).create_ui()
