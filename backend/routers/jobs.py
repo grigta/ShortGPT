@@ -102,7 +102,7 @@ async def jobs_events(request: Request):
         q = manager.subscribe()
         try:
             for env in manager.snapshot_events():
-                yield {"event": env["event"], "id": env["id"],
+                yield {"event": env["event"], "id": str(env["id"]),
                        "data": json.dumps(env["data"], ensure_ascii=False)}
             while True:
                 if await request.is_disconnected():
@@ -111,7 +111,7 @@ async def jobs_events(request: Request):
                     env = await asyncio.wait_for(q.get(), timeout=15)
                 except asyncio.TimeoutError:
                     continue  # позволяем sse-starlette слать ping
-                yield {"event": env["event"], "id": env["id"],
+                yield {"event": env["event"], "id": str(env["id"]),
                        "data": json.dumps(env["data"], ensure_ascii=False)}
         finally:
             manager.unsubscribe(q)
