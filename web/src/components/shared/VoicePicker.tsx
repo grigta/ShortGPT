@@ -90,7 +90,11 @@ export function VoicePicker({ value, onChange, hideLanguage, error }: VoicePicke
             />
           </Field>
         ) : (
-          <Field label="Голос ElevenLabs" className="w-56">
+          <Field
+            label="Голос ElevenLabs"
+            hint="Голоса мультиязычные: любой озвучит выбранный язык"
+            className="w-56"
+          >
             <Combobox
               options={(eleven.data?.voices ?? []).map((v) => ({ value: v, label: v }))}
               value={value.voice_name ?? null}
