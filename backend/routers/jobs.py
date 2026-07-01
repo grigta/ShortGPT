@@ -57,6 +57,13 @@ def _validate_keys(voice: VoiceSpec) -> None:
 @router.post("/shorts", status_code=202, response_model=JobGroupOut)
 def create_shorts(body: ShortsRequest, request: Request):
     _validate_keys(body.voice)
+    if body.num_images and body.image_source == "generate":
+        from shortGPT.gpt import openrouter
+        if not openrouter.get_selected_image_model():
+            raise HTTPException(
+                status_code=422,
+                detail="Для генерации картинок выберите модель изображений в Настройках "
+                       "или переключите источник на «Поиск в интернете»")
     manager = _manager(request)
     items = []
     for _ in range(body.num_shorts):

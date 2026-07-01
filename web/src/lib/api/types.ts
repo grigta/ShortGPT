@@ -62,9 +62,11 @@ export interface ShortJobCreate {
   short_type: 'reddit' | 'facts'
   facts_subject?: string
   num_shorts: number
+  /** Для facts пустая строка = без фона (канвас + картинки + субтитры) */
   background_video: string
   background_music: string
   num_images?: number
+  image_source: 'generate' | 'search'
   watermark?: string
   language: string
   voice: VoiceSpec

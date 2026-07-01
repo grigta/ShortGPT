@@ -48,12 +48,15 @@ export function CreateShortPage() {
   const [voice, setVoice] = useState<VoiceSpec>({ engine: 'edge', language: 'English', gender: 'male' })
   const [imagesEnabled, setImagesEnabled] = useState(true)
   const [numImages, setNumImages] = useState<'5' | '10' | '25'>('10')
+  const [imageSource, setImageSource] = useState<'generate' | 'search'>('generate')
   const [watermarkEnabled, setWatermarkEnabled] = useState(false)
   const [watermark, setWatermark] = useState('')
   const [bgVideo, setBgVideo] = useState<string | null>(null)
   const [bgMusic, setBgMusic] = useState<string | null>(null)
 
   const { data: health } = useQuery({ queryKey: ['health'], queryFn: settingsApi.health })
+
+  const isFacts = preset !== 'reddit'
 
   const blockReason = useMemo(() => {
     if (health && !health.keys.OPENROUTER_API_KEY) return 'Добавьте ключ OpenRouter в настройках'
@@ -62,10 +65,12 @@ export function CreateShortPage() {
     if (voice.engine === 'elevenlabs' && !voice.voice_name) return 'Выберите голос ElevenLabs'
     if (watermarkEnabled && !WATERMARK_RE.test(watermark))
       return 'Водяной знак: 3–25 символов — буквы, цифры, пробел, - и _'
-    if (!bgVideo) return 'Выберите фоновое видео'
-    if (!bgMusic) return 'Выберите фоновую музыку'
+    if (!isFacts && !bgVideo) return 'Выберите фоновое видео'
+    if (!isFacts && !bgMusic) return 'Выберите фоновую музыку'
+    if (isFacts && !bgVideo && !imagesEnabled)
+      return 'Без фонового видео включите AI-изображения'
     return null
-  }, [health, preset, customSubject, voice, watermarkEnabled, watermark, bgVideo, bgMusic])
+  }, [health, preset, isFacts, customSubject, voice, watermarkEnabled, watermark, bgVideo, bgMusic, imagesEnabled])
 
   const launch = useMutation({
     mutationFn: () => {
@@ -80,9 +85,10 @@ export function CreateShortPage() {
                 ? 'scientific facts'
                 : customSubject.trim(),
         num_shorts: numShorts,
-        background_video: bgVideo!,
-        background_music: bgMusic!,
+        background_video: bgVideo ?? '',
+        background_music: bgMusic ?? '',
         num_images: imagesEnabled ? Number(numImages) : undefined,
+        image_source: imageSource,
         watermark: watermarkEnabled ? watermark : undefined,
         language: voice.language,
         voice,
@@ -156,6 +162,18 @@ export function CreateShortPage() {
                   />
                 )}
               </div>
+              {imagesEnabled && (
+                <Field label="Источник картинок" hint={imageSource === 'generate' ? 'Через выбранную image-модель OpenRouter' : 'Поиск подходящих картинок в интернете'}>
+                  <SegmentedControl
+                    options={[
+                      { value: 'generate', label: 'Генерация AI' },
+                      { value: 'search', label: 'Поиск в интернете' },
+                    ]}
+                    value={imageSource}
+                    onChange={setImageSource}
+                  />
+                </Field>
+              )}
               <div className="flex flex-wrap items-center gap-5">
                 <Toggle checked={watermarkEnabled} onChange={setWatermarkEnabled} label="Водяной знак" />
                 {watermarkEnabled && (
@@ -173,11 +191,27 @@ export function CreateShortPage() {
 
           <Section n={4} title="Фон">
             <div className="space-y-5">
-              <Field label="Фоновое видео">
-                <AssetSelectRow assetType="background video" value={bgVideo} onChange={setBgVideo} />
+              {isFacts && (
+                <p className="text-[12.5px] leading-relaxed text-text-low">
+                  Для фактов фон необязателен: без него ролик соберётся из AI-картинок крупным
+                  планом на тёмном канвасе + субтитры. Повторный клик снимает выбор.
+                </p>
+              )}
+              <Field label={isFacts ? 'Фоновое видео · опционально' : 'Фоновое видео'}>
+                <AssetSelectRow
+                  assetType="background video"
+                  value={bgVideo}
+                  onChange={setBgVideo}
+                  allowNone={isFacts}
+                />
               </Field>
-              <Field label="Фоновая музыка">
-                <AssetSelectRow assetType="background music" value={bgMusic} onChange={setBgMusic} />
+              <Field label={isFacts ? 'Фоновая музыка · опционально' : 'Фоновая музыка'}>
+                <AssetSelectRow
+                  assetType="background music"
+                  value={bgMusic}
+                  onChange={setBgMusic}
+                  allowNone={isFacts}
+                />
               </Field>
             </div>
           </Section>
@@ -211,10 +245,15 @@ export function CreateShortPage() {
                     ? `EdgeTTS · ${voice.gender === 'female' ? 'женский' : 'мужской'}`
                     : `ElevenLabs · ${voice.voice_name ?? '—'}`,
                 ],
-                ['Картинки', imagesEnabled ? numImages : 'нет'],
+                [
+                  'Картинки',
+                  imagesEnabled
+                    ? `${numImages} · ${imageSource === 'generate' ? 'генерация' : 'поиск'}`
+                    : 'нет',
+                ],
                 ['Водяной знак', watermarkEnabled ? watermark || '—' : 'нет'],
-                ['Фон-видео', bgVideo ?? '—'],
-                ['Музыка', bgMusic ?? '—'],
+                ['Фон-видео', bgVideo ?? (isFacts ? 'нет · канвас' : '—')],
+                ['Музыка', bgMusic ?? (isFacts ? 'нет' : '—')],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3">
                   <dt className="shrink-0 text-text-low">{k}</dt>

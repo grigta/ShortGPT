@@ -9,12 +9,14 @@ import { Skeleton } from '../ui/Skeleton'
 interface AssetSelectRowProps {
   assetType: Extract<AssetType, 'background video' | 'background music'>
   value: string | null
-  onChange: (name: string) => void
+  onChange: (name: string | null) => void
   error?: string
+  /** Разрешить снятие выбора повторным кликом (когда поле опционально) */
+  allowNone?: boolean
 }
 
 /** Горизонтальный ряд миниатюр-ассетов с одиночным выбором. */
-export function AssetSelectRow({ assetType, value, onChange, error }: AssetSelectRowProps) {
+export function AssetSelectRow({ assetType, value, onChange, error, allowNone }: AssetSelectRowProps) {
   const { data: assets, isLoading } = useQuery({ queryKey: ['assets'], queryFn: assetsApi.list })
   const items = (assets ?? []).filter((a) => a.type === assetType)
   const isVideo = assetType === 'background video'
@@ -42,8 +44,8 @@ export function AssetSelectRow({ assetType, value, onChange, error }: AssetSelec
             <button
               key={asset.name}
               type="button"
-              onClick={() => onChange(asset.name)}
-              title={asset.name}
+              onClick={() => onChange(allowNone && active ? null : asset.name)}
+              title={allowNone && active ? `${asset.name} — кликните, чтобы убрать` : asset.name}
               className={cn(
                 'group relative shrink-0 overflow-hidden rounded-md border text-left transition-all duration-120',
                 isVideo ? 'h-24 w-40' : 'h-12 min-w-36 px-3',

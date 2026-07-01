@@ -32,9 +32,11 @@ class ShortsRequest(BaseModel):
     short_type: Literal["reddit", "facts"]
     facts_subject: Optional[str] = None
     num_shorts: int = Field(1, ge=1, le=10)
-    background_video: str
-    background_music: str
+    # Для facts фон опционален: без него ролик = канвас + картинки + субтитры.
+    background_video: str = ""
+    background_music: str = ""
     num_images: Optional[int] = None
+    image_source: Literal["generate", "search"] = "generate"
     watermark: Optional[str] = None
     language: Optional[str] = None  # берётся из voice.language, оставлено для совместимости
     voice: VoiceSpec
@@ -43,6 +45,11 @@ class ShortsRequest(BaseModel):
     def _check_facts(self):
         if self.short_type == "facts" and not (self.facts_subject and self.facts_subject.strip()):
             raise ValueError("Для роликов с фактами укажите facts_subject")
+        if self.short_type == "reddit":
+            if not self.background_video or not self.background_music:
+                raise ValueError("Для Reddit-роликов нужны фоновое видео и музыка")
+        elif not self.background_video and not self.num_images:
+            raise ValueError("Без фонового видео нужны AI-изображения (num_images)")
         return self
 
     @field_validator("watermark")

@@ -57,6 +57,7 @@ def build_short_factory(req: ShortsRequest) -> Callable[[], object]:
                 num_images=req.num_images,
                 watermark=watermark,
                 language=lang,
+                image_source=req.image_source,
             )
         from shortGPT.engine.facts_short_engine import FactsShortEngine
         return FactsShortEngine(
@@ -67,6 +68,7 @@ def build_short_factory(req: ShortsRequest) -> Callable[[], object]:
             num_images=req.num_images,
             watermark=watermark,
             language=lang,
+            image_source=req.image_source,
         )
     return factory
 
