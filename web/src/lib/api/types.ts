@@ -11,12 +11,14 @@ export interface JobOut {
   step: number
   total_steps: number
   step_label: string
-  group_id: string | null
+  group_id: string
   result_path: string | null
   video_url: string | null
   error: string | null
-  created_at: string
-  cancel_requested: boolean
+  /** UNIX-секунды (float с бэкенда); в SSE-событиях отсутствует */
+  created_at?: number | null
+  cancel_requested?: boolean
+  request?: Record<string, unknown> | null
 }
 
 export interface JobDetail extends JobOut {
@@ -28,8 +30,23 @@ export interface JobGroupOut {
   jobs: JobOut[]
 }
 
-export interface JobEvent extends JobOut {
+/** Payload SSE-события /api/jobs/events (job_id вместо id). */
+export interface JobEventPayload {
+  job_id: string
+  group_id: string
+  kind: JobKind
+  status: JobStatus
+  step: number
+  total_steps: number
+  step_label: string
   log_tail?: string[]
+  result_path: string | null
+  video_url: string | null
+  error: string | null
+}
+
+export interface JobEvent extends Omit<JobEventPayload, 'job_id'> {
+  id: string
 }
 
 export interface VoiceSpec {

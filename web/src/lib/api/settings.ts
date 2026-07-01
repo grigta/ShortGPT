@@ -32,5 +32,5 @@ export const settingsApi = {
     return api.get<ModelsResponse>(`/api/models?${q}`)
   },
   selectModel: (model_id: string, target: 'text' | 'image') =>
-    api.put<{ selected: string }>('/api/models/selected', { model_id, target }),
+    api.put<{ target: string; model_id: string }>('/api/models/selected', { model_id, target }),
 }

@@ -27,15 +27,15 @@ function groupStatus(statuses: JobStatus[]): JobStatus {
   return 'done'
 }
 
-function useElapsed(sinceIso: string | undefined, active: boolean) {
+function useElapsed(sinceUnix: number | null | undefined, active: boolean) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     if (!active) return
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [active])
-  if (!sinceIso) return ''
-  const sec = Math.max(0, Math.floor((now - new Date(sinceIso).getTime()) / 1000))
+  if (!sinceUnix) return ''
+  const sec = Math.max(0, Math.floor(now / 1000 - sinceUnix))
   const m = Math.floor(sec / 60)
   const s = sec % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`

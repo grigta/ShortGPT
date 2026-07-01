@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { useShallow } from 'zustand/react/shallow'
 import { Page } from '../../components/layout/Page'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -43,7 +44,7 @@ function SectionTitle({ children }: { children: string }) {
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const active = useJobsStore(selectActiveJobs)
+  const active = useJobsStore(useShallow(selectActiveJobs))
   const { data: videos } = useQuery({ queryKey: ['videos'], queryFn: videosApi.list })
   const [lightbox, setLightbox] = useState<VideoFile | null>(null)
 

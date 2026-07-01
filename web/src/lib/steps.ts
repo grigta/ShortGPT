@@ -28,9 +28,10 @@ export function prettifyStepLabel(raw: string): string {
   if (!raw) return ''
   const name = raw.includes(':') ? raw.slice(raw.lastIndexOf(':') + 1).trim() : raw.trim()
   if (STEP_LABELS[name]) return STEP_LABELS[name]
-  // _somethingCamelCase → "something camel case"
+  // _somethingCamelCase / some_thing → "something camel case"
   const humanized = name
     .replace(/^_+/, '')
+    .replace(/_+/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .toLowerCase()
   return humanized.charAt(0).toUpperCase() + humanized.slice(1)

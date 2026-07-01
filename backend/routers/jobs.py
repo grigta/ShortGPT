@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -78,6 +79,21 @@ def create_translations(body: TranslationRequest, request: Request):
     _validate_keys(body.voice)
     manager = _manager(request)
     group_id, jobs = manager.submit_group("translation", factories.translation_items(body))
+    return {"group_id": group_id, "jobs": [_job_out(j) for j in jobs]}
+
+
+@router.post("/_stub", status_code=202, response_model=JobGroupOut, include_in_schema=False)
+def create_stub(request: Request, count: int = Query(1, ge=1, le=5),
+                steps: int = Query(12, ge=1, le=30), sleep: float = Query(1.0, ge=0, le=10)):
+    """Dev-only: фейковый рендер для проверки сцены прогресса без трат на API.
+    Активен только при SHORTGPT_DEV_STUB=1."""
+    if os.environ.get("SHORTGPT_DEV_STUB") != "1":
+        raise HTTPException(status_code=404, detail="Not Found")
+    from backend.jobs._stub_engine import build_stub_factory
+    manager = _manager(request)
+    items = [(build_stub_factory(total_steps=steps, sleep=sleep), {"stub": True})
+             for _ in range(count)]
+    group_id, jobs = manager.submit_group("video", items)
     return {"group_id": group_id, "jobs": [_job_out(j) for j in jobs]}
 
 

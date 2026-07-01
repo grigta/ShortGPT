@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { useShallow } from 'zustand/react/shallow'
 import { useJobsStore, selectActiveJobs } from '../../stores/jobs'
 import { TallyDot } from '../ui/TallyDot'
 
@@ -13,7 +14,7 @@ const KIND_LABEL: Record<string, string> = {
 
 /** Плавающая капсула очереди рендеров — видна на всех экранах, пока есть активные job'ы. */
 export function JobsDock() {
-  const active = useJobsStore(selectActiveJobs)
+  const active = useJobsStore(useShallow(selectActiveJobs))
   const [expanded, setExpanded] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()

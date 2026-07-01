@@ -20,7 +20,8 @@ import type { ShortJobCreate, VoiceSpec } from '../../lib/api/types'
 
 type Preset = 'reddit' | 'historical_facts' | 'scientific_facts' | 'custom'
 
-const WATERMARK_RE = /^[A-Za-z0-9а-яА-ЯёЁ _-]{3,25}$/
+// как на бэкенде: латиница, цифры и пробелы, 3–25 символов
+const WATERMARK_RE = /^[A-Za-z0-9 ]{3,25}$/
 
 function Section({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (

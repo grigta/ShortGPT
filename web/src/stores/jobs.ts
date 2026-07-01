@@ -19,12 +19,20 @@ const ACTIVE: JobStatus[] = ['queued', 'running']
 
 function appendLog(current: string[], tail: string[] | undefined): string[] {
   if (!tail?.length) return current
-  // log_tail перекрывается с уже накопленным при реконнекте — дописываем только новое
-  const merged = [...current]
-  for (const line of tail) {
-    if (!merged.length || merged[merged.length - 1] !== line) merged.push(line)
+  // log_tail (последние N строк) перекрывается с накопленным логом —
+  // ищем максимальное перекрытие «хвост current == начало tail» и дописываем остаток
+  const max = Math.min(current.length, tail.length)
+  for (let k = max; k > 0; k--) {
+    let match = true
+    for (let i = 0; i < k; i++) {
+      if (current[current.length - k + i] !== tail[i]) {
+        match = false
+        break
+      }
+    }
+    if (match) return k === tail.length ? current : [...current, ...tail.slice(k)]
   }
-  return merged
+  return [...current, ...tail]
 }
 
 export const useJobsStore = create<JobsStore>((set) => ({
@@ -85,4 +93,6 @@ export const selectActiveJobs = (s: JobsStore) =>
 export const selectGroup = (groupId: string) => (s: JobsStore) =>
   Object.values(s.jobs)
     .filter((j) => j.group_id === groupId || j.id === groupId)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
+    .sort(
+      (a, b) => (a.created_at ?? 0) - (b.created_at ?? 0) || a.id.localeCompare(b.id),
+    )

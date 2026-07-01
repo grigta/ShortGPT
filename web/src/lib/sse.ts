@@ -1,6 +1,6 @@
 import { useJobsStore } from '../stores/jobs'
 import { api } from './api/client'
-import type { JobEvent, JobOut } from './api/types'
+import type { JobEventPayload, JobOut } from './api/types'
 
 // Singleton-подписка на глобальный SSE-поток job'ов.
 // EventSource сам реконнектится; после каждого open заново гидрируемся снапшотом.
@@ -23,7 +23,8 @@ export function connectJobEvents() {
 
   const onEvent = (ev: MessageEvent) => {
     try {
-      store.applyEvent(JSON.parse(ev.data) as JobEvent)
+      const { job_id, ...rest } = JSON.parse(ev.data) as JobEventPayload
+      store.applyEvent({ id: job_id, ...rest })
     } catch (err) {
       console.error('[sse] некорректное событие', err, ev.data)
     }
