@@ -3,6 +3,8 @@ import type { JobEvent, JobOut, JobStatus } from '../lib/api/types'
 
 export interface JobState extends JobOut {
   log: string[]
+  /** Подписи пройденных шагов по номеру шага (накапливаются из live-событий). */
+  step_labels: Record<number, string>
 }
 
 interface JobsStore {
@@ -42,10 +44,17 @@ export const useJobsStore = create<JobsStore>((set) => ({
         return s
       }
       const { log_tail, ...job } = e
+      const step_labels = { ...prev?.step_labels }
+      if (e.step >= 1 && e.step_label) step_labels[e.step] = e.step_label
       return {
         jobs: {
           ...s.jobs,
-          [e.id]: { ...prev, ...job, log: appendLog(prev?.log ?? [], log_tail) },
+          [e.id]: {
+            ...prev,
+            ...job,
+            log: appendLog(prev?.log ?? [], log_tail),
+            step_labels,
+          },
         },
       }
     }),
@@ -55,10 +64,13 @@ export const useJobsStore = create<JobsStore>((set) => ({
       const jobs = { ...s.jobs }
       for (const j of list) {
         const prev = jobs[j.id]
+        const step_labels = { ...prev?.step_labels }
+        if (j.step >= 1 && j.step_label) step_labels[j.step] = j.step_label
         jobs[j.id] = {
           ...prev,
           ...j,
           log: j.log ?? prev?.log ?? [],
+          step_labels,
         }
       }
       return { jobs }
