@@ -14,7 +14,6 @@ import { useShallow } from 'zustand/react/shallow'
 import { Page } from '../../components/layout/Page'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { EmptyState } from '../../components/ui/EmptyState'
 import { Modal } from '../../components/ui/Modal'
 import { TallyDot } from '../../components/ui/TallyDot'
 import { VideoPlayer } from '../../components/ui/VideoPlayer'
@@ -60,7 +59,19 @@ export function DashboardPage() {
 
   return (
     <Page wide>
-      <PageHeader title="Студия" subtitle="Что в работе и что уже отснято" />
+      {/* Хиро-фон: «жидкий обсидиан» (nano-banana), гаснет книзу */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[460px] overflow-hidden">
+        <img
+          src="/bg-liquid.webp"
+          alt=""
+          className="size-full object-cover opacity-55"
+          style={{
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,.95) 20%, transparent 92%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,.95) 20%, transparent 92%)',
+          }}
+        />
+      </div>
+      <PageHeader eyebrow="shortgpt studio" title="Студия" subtitle="Что в работе и что уже отснято" />
 
       <motion.div
         initial="hidden"
@@ -80,7 +91,7 @@ export function DashboardPage() {
                     key={groupId}
                     type="button"
                     onClick={() => navigate(`/jobs/${groupId}`)}
-                    className="flex w-full items-center gap-4 rounded-md border border-line bg-ink-900 px-5 py-4 text-left transition-all duration-120 hover:border-amber-500/30 hover:bg-ink-800"
+                    className="glass flex w-full items-center gap-4 rounded-md px-5 py-4 text-left transition-all duration-120 hover:border-amber-500/30"
                   >
                     <TallyDot status={running.status} className="size-2.5" />
                     <div className="min-w-0 flex-1">
@@ -137,20 +148,24 @@ export function DashboardPage() {
                 title: 'Перевод',
                 text: 'Дубляж ролика сразу на несколько языков',
               },
-            ].map(({ to, icon: Icon, title, text }) => (
+            ].map(({ to, icon: Icon, title, text }, i) => (
               <Link
                 key={to}
                 to={to}
-                className="group rounded-lg border border-line bg-ink-900 p-6 transition-all duration-200 hover:-translate-y-1 hover:border-amber-500/40 hover:shadow-card"
+                className="glass group relative overflow-hidden rounded-lg p-6 transition-all duration-200 hover:-translate-y-1 hover:border-amber-500/40 hover:shadow-glow"
               >
-                <Icon
-                  size={22}
-                  strokeWidth={1.6}
-                  className="text-text-mid transition-colors duration-200 group-hover:text-amber-400"
-                />
-                <h3 className="text-display mt-4 text-[16px] font-medium text-text-hi">{title}</h3>
+                <span
+                  aria-hidden
+                  className="text-display pointer-events-none absolute -top-3 right-3 text-[64px] leading-none font-bold text-text-hi/5 transition-colors duration-300 group-hover:text-amber-500/10"
+                >
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="flex size-10 items-center justify-center rounded-md border border-amber-500/25 bg-amber-500/10">
+                  <Icon size={19} strokeWidth={1.7} className="text-amber-400" />
+                </span>
+                <h3 className="text-display mt-5 text-[17px] font-medium text-text-hi">{title}</h3>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-text-low">{text}</p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] text-text-low transition-colors duration-200 group-hover:text-amber-400">
+                <span className="mt-5 inline-flex items-center gap-1.5 text-[13px] text-text-low transition-all duration-200 group-hover:gap-2.5 group-hover:text-amber-400">
                   Начать <ArrowRight size={13} />
                 </span>
               </Link>
@@ -161,16 +176,30 @@ export function DashboardPage() {
         <motion.section variants={item}>
           <SectionTitle>Последние рендеры</SectionTitle>
           {!videos?.length ? (
-            <EmptyState
-              icon={<Clapperboard size={28} />}
-              title="Здесь появятся готовые видео"
-              description="Начните с Shorts — это самый быстрый путь к первому ролику"
-              action={
-                <Link to="/create/short">
+            <div className="relative overflow-hidden rounded-lg border border-line">
+              <img
+                src="/bg-studio.webp"
+                alt=""
+                aria-hidden
+                className="absolute inset-0 size-full object-cover opacity-45"
+              />
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/60 to-ink-950/30"
+              />
+              <div className="relative flex flex-col items-start gap-2 px-10 py-14">
+                <Clapperboard size={24} className="mb-2 text-amber-400" />
+                <p className="text-display text-[20px] font-medium text-text-hi">
+                  Здесь появятся готовые видео
+                </p>
+                <p className="max-w-sm text-[13.5px] text-text-mid">
+                  Начните с Shorts — это самый быстрый путь к первому ролику
+                </p>
+                <Link to="/create/short" className="mt-4">
                   <Button variant="primary">Создать short</Button>
                 </Link>
-              }
-            />
+              </div>
+            </div>
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-2">
               {videos.map((v) => (

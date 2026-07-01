@@ -106,7 +106,7 @@ export function JobScenePage() {
           <ArrowLeft size={17} />
         </Link>
         <TallyDot status={status} className="size-2.5" />
-        <h1 className="text-display text-[20px] font-semibold tracking-wide">
+        <h1 className="text-display text-[26px] font-semibold tracking-wide">
           {status === 'done'
             ? 'ГОТОВО'
             : status === 'failed'

@@ -45,7 +45,7 @@ export function DevelopingFrame({ job }: { job: JobState }) {
               job.status === 'failed'
                 ? 'border-err/60 shadow-glow-err'
                 : job.status === 'running'
-                  ? 'border-amber-500/30'
+                  ? 'border-amber-500/40 shadow-[0_0_0_1px_rgba(246,166,35,.2),0_0_48px_rgba(246,166,35,.14)]'
                   : 'border-line',
             )}
           >
@@ -83,7 +83,7 @@ export function DevelopingFrame({ job }: { job: JobState }) {
             )}
             {/* счётчик шагов в центре кадра */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
-              <span className="text-display text-[40px] font-semibold text-text-hi tabular-nums">
+              <span className="text-display text-[56px] font-semibold text-text-hi tabular-nums">
                 {job.status === 'queued' ? '—' : `${job.step}/${job.total_steps}`}
               </span>
               <span className="font-mono text-[12px] text-text-mid">

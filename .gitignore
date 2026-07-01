@@ -33,3 +33,4 @@ Untitled-1.ipynb
 .database/.tinymongo.lock
 web/node_modules/
 web/dist/
+.generated_images/

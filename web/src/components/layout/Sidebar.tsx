@@ -37,13 +37,13 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex shrink-0 flex-col border-r border-line bg-ink-950 transition-[width] duration-200',
+        'flex shrink-0 flex-col border-r border-line bg-ink-950/55 backdrop-blur-xl transition-[width] duration-200',
         collapsed ? 'w-16' : 'w-58',
       )}
     >
       <div className={cn('flex items-center gap-2.5 px-5 py-5', collapsed && 'px-0 justify-center')}>
         <span className="relative flex size-3 items-center justify-center">
-          <span className="absolute size-3 rounded-full bg-amber-500/25" />
+          <span className="absolute size-3 rounded-full bg-amber-500/25 shadow-[0_0_12px_2px_rgba(246,166,35,.45)]" />
           <span className="size-1.5 rounded-full bg-amber-500" />
         </span>
         {!collapsed && (
@@ -65,7 +65,7 @@ export function Sidebar() {
                 'group relative flex items-center gap-3 rounded-md px-3 py-2 text-[14px] transition-colors duration-120',
                 collapsed && 'justify-center px-0',
                 isActive
-                  ? 'bg-ink-900 text-text-hi'
+                  ? 'bg-gradient-to-r from-amber-500/12 to-transparent text-text-hi'
                   : 'text-text-mid hover:bg-ink-900/60 hover:text-text-hi',
               )
             }
@@ -73,7 +73,7 @@ export function Sidebar() {
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-amber-500" />
+                  <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-amber-500 shadow-[0_0_8px_1px_rgba(246,166,35,.6)]" />
                 )}
                 <Icon size={17} strokeWidth={1.8} className="shrink-0" />
                 {!collapsed && <span>{label}</span>}

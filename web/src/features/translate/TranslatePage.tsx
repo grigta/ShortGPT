@@ -86,7 +86,7 @@ export function TranslatePage() {
 
   return (
     <Page>
-      <PageHeader title="Перевод видео" subtitle="Дубляж на несколько языков за один запуск" />
+      <PageHeader eyebrow="локализация" title="Перевод видео" subtitle="Дубляж на несколько языков за один запуск" />
 
       <motion.div
         initial="hidden"

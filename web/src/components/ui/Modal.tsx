@@ -38,7 +38,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              'w-full max-w-lg rounded-lg border border-line bg-ink-900 shadow-card',
+              'glass-blur w-full max-w-lg rounded-lg shadow-card',
               className,
             )}
           >

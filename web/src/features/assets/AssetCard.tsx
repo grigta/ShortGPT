@@ -42,7 +42,7 @@ export function AssetCard({ asset, onOpen, onDelete }: AssetCardProps) {
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className="group relative cursor-pointer overflow-hidden rounded-md border border-line bg-ink-900 transition-all duration-120 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card"
+      className="glass group relative cursor-pointer overflow-hidden rounded-md transition-all duration-120 hover:-translate-y-0.5 hover:border-amber-500/30 hover:shadow-card"
     >
       <div
         className="relative flex aspect-video items-center justify-center overflow-hidden bg-ink-800"

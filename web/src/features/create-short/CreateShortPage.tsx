@@ -108,7 +108,7 @@ export function CreateShortPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-10">
-      <PageHeader title="Shorts" subtitle="Вертикальные ролики с озвучкой и субтитрами — пачкой" />
+      <PageHeader eyebrow="производство" title="Shorts" subtitle="Вертикальные ролики с озвучкой и субтитрами — пачкой" />
 
       <div className="flex gap-10 pb-16">
         <motion.div
@@ -224,7 +224,7 @@ export function CreateShortPage() {
           transition={{ duration: 0.4, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="w-72 shrink-0"
         >
-          <div className="sticky top-10 rounded-lg border border-line bg-ink-900 p-5">
+          <div className="glass sticky top-10 rounded-lg p-5">
             <div
               aria-hidden
               className="mb-4 h-2.5 rounded-sm"

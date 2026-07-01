@@ -31,7 +31,7 @@ export function JobsDock() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed right-5 bottom-5 z-40 w-80 overflow-hidden rounded-lg border border-line bg-ink-900/95 shadow-card backdrop-blur"
+        className="glass-blur fixed right-5 bottom-5 z-40 w-80 overflow-hidden rounded-lg shadow-card"
       >
         <button
           type="button"

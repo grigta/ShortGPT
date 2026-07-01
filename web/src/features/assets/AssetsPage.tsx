@@ -55,6 +55,7 @@ export function AssetsPage() {
   return (
     <Page wide>
       <PageHeader
+        eyebrow="библиотека"
         title="Ассеты"
         subtitle="Фоновые видео, музыка и изображения для рендеров"
         actions={

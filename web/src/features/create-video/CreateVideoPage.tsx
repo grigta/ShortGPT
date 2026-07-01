@@ -84,7 +84,7 @@ export function CreateVideoPage() {
 
   return (
     <Page>
-      <PageHeader title="Видео из стоков" subtitle="Бриф → сценарий → рендер" />
+      <PageHeader eyebrow="производство" title="Видео из стоков" subtitle="Бриф → сценарий → рендер" />
 
       {/* индикатор шага */}
       <div className="mb-8 flex items-center gap-2 font-mono text-[12px]">

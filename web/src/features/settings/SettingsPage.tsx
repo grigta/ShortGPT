@@ -7,7 +7,7 @@ import { ModelCatalog } from './ModelCatalog'
 export function SettingsPage() {
   return (
     <Page>
-      <PageHeader title="Настройки" subtitle="Ключи API и модели OpenRouter" />
+      <PageHeader eyebrow="система" title="Настройки" subtitle="Ключи API и модели OpenRouter" />
       <motion.div
         initial="hidden"
         animate="show"

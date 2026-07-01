@@ -14,10 +14,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    'gradient-amber text-amber-ink font-semibold hover:shadow-glow active:scale-[.98] disabled:hover:shadow-none',
+    'gradient-amber btn-shine text-amber-ink font-semibold shadow-[0_6px_24px_rgba(246,166,35,.22)] hover:shadow-glow active:scale-[.98] disabled:hover:shadow-none',
   secondary:
-    'bg-ink-800 text-text-hi border border-line hover:border-line-strong hover:bg-ink-700 active:scale-[.98]',
-  ghost: 'text-text-mid hover:bg-ink-800 hover:text-text-hi active:scale-[.98]',
+    'glass text-text-hi hover:border-line-strong hover:bg-ink-700/70 active:scale-[.98]',
+  ghost: 'text-text-mid hover:bg-ink-800/70 hover:text-text-hi active:scale-[.98]',
   danger:
     'bg-err/10 text-err border border-err/30 hover:bg-err/20 hover:border-err/50 active:scale-[.98]',
 }
