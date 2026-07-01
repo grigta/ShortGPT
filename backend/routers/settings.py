@@ -19,4 +19,5 @@ def put_key(key: str, body: KeyUpdate):
     if not settings_svc.is_registered(key):
         raise HTTPException(status_code=404, detail=f"Неизвестный ключ: {key}")
     settings_svc.set_key(key, body.value)
-    return {"key": key, "is_set": bool(body.value)}
+    valid, detail = settings_svc.verify_key(key, body.value)
+    return {"key": key, "is_set": bool(body.value), "valid": valid, "detail": detail}

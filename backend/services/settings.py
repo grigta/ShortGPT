@@ -52,3 +52,42 @@ def list_keys() -> List[dict]:
 def set_key(key: str, value: str) -> None:
     """Записать ключ. Пустая строка = очистить."""
     ApiKeyManager.set_api_key(key, value or "")
+
+
+def verify_key(key: str, value: str):
+    """Живая проверка сохранённого ключа у провайдера.
+
+    Возвращает (valid, detail): valid=None — проверка неприменима/недоступна,
+    True/False — результат. Сохранение НЕ блокирует: ключ уже записан,
+    это диагностика для UI (типовая ошибка — ключ не того провайдера).
+    """
+    import requests
+
+    if not value:
+        return None, None
+    try:
+        if key == "OPENROUTER_API_KEY":
+            r = requests.get("https://openrouter.ai/api/v1/key",
+                             headers={"Authorization": f"Bearer {value}"}, timeout=10)
+            if r.status_code == 200:
+                return True, None
+            msg = r.json().get("error", {}).get("message", r.text[:120])
+            hint = " Ключ OpenRouter выглядит как sk-or-v1-…" if not value.startswith("sk-or-") else ""
+            return False, f"OpenRouter не принял ключ ({r.status_code}: {msg}).{hint}"
+        if key == "ELEVENLABS_API_KEY":
+            r = requests.get("https://api.elevenlabs.io/v1/user",
+                             headers={"xi-api-key": value}, timeout=10)
+            if r.status_code == 200:
+                return True, None
+            detail = r.json().get("detail")
+            msg = detail.get("message") if isinstance(detail, dict) else str(detail)[:120]
+            return False, f"ElevenLabs не принял ключ ({r.status_code}: {msg})"
+        if key == "PEXELS_API_KEY":
+            r = requests.get("https://api.pexels.com/v1/search?query=test&per_page=1",
+                             headers={"Authorization": value}, timeout=10)
+            if r.status_code == 200:
+                return True, None
+            return False, f"Pexels не принял ключ ({r.status_code})"
+    except Exception as e:
+        return None, f"Проверка не удалась: {type(e).__name__}"
+    return None, None

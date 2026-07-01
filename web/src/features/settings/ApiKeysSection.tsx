@@ -22,22 +22,28 @@ export function ApiKeysSection() {
   const save = useMutation({
     mutationFn: async () => {
       const changed = Object.entries(edits)
+      const results = []
       for (const [key, value] of changed) {
-        await settingsApi.setKey(key, value)
+        results.push(await settingsApi.setKey(key, value))
       }
-      return changed.map(([k]) => k)
+      return results
     },
-    onSuccess: (savedKeys) => {
+    onSuccess: (results) => {
       setEdits({})
       setSavedAt((s) => ({
         ...s,
-        ...Object.fromEntries(savedKeys.map((k) => [k, Date.now()])),
+        ...Object.fromEntries(results.map((r) => [r.key, Date.now()])),
       }))
       void qc.invalidateQueries({ queryKey: ['settings-keys'] })
       void qc.invalidateQueries({ queryKey: ['health'] })
       // после смены ключа список голосов ElevenLabs должен перечитаться сразу
       void qc.invalidateQueries({ queryKey: ['voices-eleven'] })
-      toast.ok('Ключи сохранены')
+      const invalid = results.filter((r) => r.valid === false)
+      if (invalid.length) {
+        for (const r of invalid) toast.err(r.detail ?? `Ключ ${r.key} не прошёл проверку`)
+      } else {
+        toast.ok('Ключи сохранены')
+      }
     },
     onError: (e) => toast.err(e instanceof Error ? e.message : 'Не удалось сохранить'),
   })

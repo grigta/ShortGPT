@@ -11,7 +11,10 @@ import type {
 export const settingsApi = {
   keys: () => api.get<KeyInfo[]>('/api/settings/keys'),
   setKey: (key: string, value: string) =>
-    api.put<KeyInfo>(`/api/settings/keys/${encodeURIComponent(key)}`, { value }),
+    api.put<{ key: string; is_set: boolean; valid: boolean | null; detail: string | null }>(
+      `/api/settings/keys/${encodeURIComponent(key)}`,
+      { value },
+    ),
   health: () => api.get<HealthOut>('/api/health'),
   languages: () => api.get<LanguageOut[]>('/api/voices/languages'),
   edgeVoices: () => api.get<EdgeVoice[]>('/api/voices/edge'),
