@@ -20,8 +20,8 @@ import type { ShortJobCreate, VoiceSpec } from '../../lib/api/types'
 
 type Preset = 'reddit' | 'historical_facts' | 'scientific_facts' | 'custom'
 
-// как на бэкенде: латиница, цифры и пробелы, 3–25 символов
-const WATERMARK_RE = /^[A-Za-z0-9 ]{3,25}$/
+// как на бэкенде (backend/schemas.py WATERMARK_RE): буквы/цифры/пробел/-/_, 3–25 символов
+const WATERMARK_RE = /^[A-Za-z0-9а-яА-ЯёЁ _-]{3,25}$/
 
 function Section({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
@@ -61,7 +61,7 @@ export function CreateShortPage() {
     if (!voice.language) return 'Выберите язык озвучки'
     if (voice.engine === 'elevenlabs' && !voice.voice_name) return 'Выберите голос ElevenLabs'
     if (watermarkEnabled && !WATERMARK_RE.test(watermark))
-      return 'Водяной знак: 3–25 символов, буквы и цифры'
+      return 'Водяной знак: 3–25 символов — буквы, цифры, пробел, - и _'
     if (!bgVideo) return 'Выберите фоновое видео'
     if (!bgMusic) return 'Выберите фоновую музыку'
     return null
