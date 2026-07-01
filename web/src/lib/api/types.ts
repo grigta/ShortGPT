@@ -119,6 +119,8 @@ export interface EdgeVoice {
 export interface ElevenLabsVoices {
   available: boolean
   voices: string[]
+  /** Причина недоступности (нет ключа / нет прав / сетевая ошибка) */
+  detail?: string
 }
 
 export interface KeyInfo {

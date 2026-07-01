@@ -48,10 +48,21 @@ export function VoicePicker({ value, onChange, hideLanguage, error }: VoicePicke
       />
       {!elevenAvailable && !eleven.isLoading && (
         <p className="text-[12px] text-text-low">
-          ElevenLabs недоступен —{' '}
-          <Link to="/settings" className="text-amber-400 hover:underline">
-            добавьте ключ в настройках
-          </Link>
+          {eleven.data?.detail && eleven.data.detail !== 'Ключ не задан' ? (
+            <>
+              ElevenLabs недоступен: {eleven.data.detail}{' '}
+              <Link to="/settings" className="text-amber-400 hover:underline">
+                Настройки →
+              </Link>
+            </>
+          ) : (
+            <>
+              ElevenLabs недоступен —{' '}
+              <Link to="/settings" className="text-amber-400 hover:underline">
+                добавьте ключ в настройках
+              </Link>
+            </>
+          )}
         </p>
       )}
 

@@ -35,6 +35,8 @@ export function ApiKeysSection() {
       }))
       void qc.invalidateQueries({ queryKey: ['settings-keys'] })
       void qc.invalidateQueries({ queryKey: ['health'] })
+      // после смены ключа список голосов ElevenLabs должен перечитаться сразу
+      void qc.invalidateQueries({ queryKey: ['voices-eleven'] })
       toast.ok('Ключи сохранены')
     },
     onError: (e) => toast.err(e instanceof Error ? e.message : 'Не удалось сохранить'),
